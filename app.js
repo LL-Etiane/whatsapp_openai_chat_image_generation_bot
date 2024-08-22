@@ -1,3 +1,4 @@
+require('dotenv').config()
 const qrcode = require("qrcode-terminal");
 const { Client, LocalAuth, MessageMedia } = require("whatsapp-web.js");
 const User = require("./db/models/users");
@@ -7,6 +8,13 @@ const { completeChat, generateImage } = require("./openai/main");
 const client = new Client({
   authStrategy: new LocalAuth(),
   ignoreStatusUpdate: true,
+  webVersionCache: {
+      remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2402.5-beta.html',
+      type: 'remote'
+  },
+  puppeteer: {
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+  }
 });
 
 client.on("qr", (qr) => {
@@ -42,7 +50,7 @@ client.on("message", async (msg) => {
     msgBody = msg.body.toLowerCase();
 
     // check if its the admin wanting to allow user access to the code
-    adminPhone = "23770169123"
+    adminPhone = process.env.ADMIN 
     if(user.isAdmin || userPhone == adminPhone && msgBody.startsWith("/allow" )){
       let phone = msgBody.split(" ")[1];
       let user = await User.findOne({ where: { phone: phone } });
